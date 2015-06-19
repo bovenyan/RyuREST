@@ -1,32 +1,41 @@
 package org.att.RyuAPI;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class OpenFlowMsg {	
 	String msg_type;
-	// mask
+	
+	// Setting
 	int dpid = 0;
 	int in_port = 0;
 	long cookie = 0;
 	long cookie_mask = 0xffffffffL;
 	int table_id = 0;
 	
-	// 32 bit IP 
+	// Match
 	final int eth_type = 2048;
 	String ip_src = "";
 	String ip_src_mask = "";
 	String ip_dst = "";
 	String ip_dst_mask = "";
 	int nw_proto = 0;
-	// 16 bit port No.
 	int tcp_src = 0;
 	int tcp_dst = 0;
 	int udp_src = 0;
 	int udp_dst = 0;
 
-	int group_id = 0;
-	boolean to_controller = false;
+	// Flow Actions
+	int out_port = 0;
+	int out_group = 0;
+	String mod_ip_dst = "";
+	String mod_ip_src = "";
+	String mod_udp_dst = "";
+	String mod_udp_src = "";
 	
+	// Group Actions
+	int group_id = 0;
+	List<Integer> out_ports = new ArrayList<Integer>();
+	
+	// Setting Map
 	Map<String, Boolean> setting = new HashMap<String, Boolean>();
 	
 	public OpenFlowMsg(String type) {
@@ -84,6 +93,9 @@ public class OpenFlowMsg {
 			}
 		}
 	}
+	
+	
+	public void setGroup(int gId, )
 	
 	/**
 	 * @param field the field that is set using (String, int) pair. 
@@ -143,6 +155,8 @@ public class OpenFlowMsg {
 		}
 	}
 	
+	
+	
 	public String toREST(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
@@ -171,27 +185,88 @@ public class OpenFlowMsg {
 			sb.append(",");
 		}
 		
+		// build match
+		if (msg_type.contains("Flow")){
+			sb.append("\"match\":{");
+			
+			if (setting.get("in_port")){
+				sb.append("\"in_port\":");
+				sb.append(in_port);
+				sb.append(",");
+			}
+			
+			if (setting.get("ip_src")){
+				sb.append("\"ip_src\":");
+				sb.append(ip_src);
+				sb.append(",");
+			}
+			
+			if (setting.get("ip_dst")){
+				sb.append("\"ip_dst\":");
+				sb.append(ip_dst);
+				sb.append(",");
+			}
+			
+			if (setting.get("tcp_src")){
+				sb.append("\"tcp_src\":");
+				sb.append(tcp_src);
+				sb.append(",");
+			}
+			
+			if (setting.get("tcp_dst")){
+				sb.append("\"tcp_dst\":");
+				sb.append(tcp_dst);
+				sb.append(",");
+			}
+			
+			if (setting.get("udp_src")){
+				sb.append("\"udp_src\":");
+				sb.append(udp_src);
+				sb.append(",");
+			}
+			
+			if (setting.get("udp_dst")){
+				sb.append("\"udp_dst\":");
+				sb.append(udp_dst);
+				sb.append(",");
+			}
+			
+			if (sb.length() > 0){ // delete last comma
+				sb.setLength(sb.length()-1);
+			}
+			
+			sb.append("},");
+			
+			if (msg_type.equals("AddFlow")){
+				sb.append("\"actions\":[");
+				if (setting.get("to_controller")){
+					
+				}
+				sb.append("]");
+			}
+		}
+		
 		if (msg_type.contains("Group")){
 			if (setting.get("group_id")){
-				if (msg_type.equals("AddGroup")){
-					sb.append("\"type\": \"ALL\"");
-				}
+				
 				sb.append("\"group_id\":");
 				sb.append(group_id);
 				sb.append(",");
+				
+				if (msg_type.equals("AddGroup")){
+					sb.append("\"type\": \"ALL\",");
+					
+					sb.append("\"buckets\": [");
+				}
 			}
 			else{
 				return "";
 			}
 		}
 		
-		if (msg_type.contains("Flow")){
-			
-		}
 		
 		
 		
-		// actions
 		
 		sb.append("}");
 		
