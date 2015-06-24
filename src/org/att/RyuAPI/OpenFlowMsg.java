@@ -20,10 +20,6 @@ public class OpenFlowMsg {
 		msg.put("dpid", value);
 	}
 	
-	public void set_in_port(int value){
-		msg.put("in_port", value);
-	}
-	
 	public void set_cookie_mask(int cookie, long mask){
 		msg.put("cookie", cookie);
 		msg.put("cookie_mask", 1);
@@ -45,6 +41,14 @@ public class OpenFlowMsg {
 	}
 	
 	// Match
+	public void set_in_port(int value){
+		match.put("in_port", value);
+	}
+	
+	public void set_metadata(Long value){
+		match.put("metadata", "0x"+Long.toHexString(value));
+	}
+	
 	public void set_ipv4_src(String value){
 		String [] parts = value.split("/");
 	
@@ -187,6 +191,15 @@ public class OpenFlowMsg {
 		actions.add(output_action);
 	}
 	
+	public void action_write_metadata(long metaData){
+		LinkedHashMap<String, Object> output_action = 
+				new LinkedHashMap<String, Object>();
+		output_action.put("type", "WRITE_METADATA");
+		output_action.put("metadata", "0x" + Long.toHexString(metaData));
+		output_action.put("metadata_mask", "0xffffffff");
+		actions.add(output_action);
+	}
+	
 	// Buckets
 	public void bucket_outputs(ArrayList<Integer> out_ports){
 		buckets = new ArrayList<Integer>(out_ports);
@@ -237,26 +250,5 @@ public class OpenFlowMsg {
 		}
 		
 		return msg_json.toString().replace("\\", "");
-	}
-	
-	public static void main(String args[]){
-		OpenFlowMsg addFlowMsg = new OpenFlowMsg("AddFlow");
-		addFlowMsg.set_cookie_mask(0, 24);
-		addFlowMsg.set_table_id(2);
-		addFlowMsg.set_priority(20);
-		addFlowMsg.set_in_port(3);
-		addFlowMsg.set_ipv4_src("10.0.0.1");
-		addFlowMsg.set_ipv4_dst("20.0.0.0/26");
-		addFlowMsg.action_set_tcp_src(20);
-		addFlowMsg.action_set_tcp_dst(80);	
-		addFlowMsg.action_output_group(1);
-		System.out.println(addFlowMsg.toJson());
-		
-		OpenFlowMsg addGroup = new OpenFlowMsg("AddGroup");
-		addFlowMsg.set_cookie_mask(0, 24);
-		addFlowMsg.set_dpid("12331");
-		addFlowMsg.set_tcp_dst(20);
-		addFlowMsg.set_tcp_src(20);
-		
 	}
 }

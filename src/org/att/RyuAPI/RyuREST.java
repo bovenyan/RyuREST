@@ -30,10 +30,8 @@ public class RyuREST {
 	public void init() throws IOException{
 		// Fetch the switch dpid
 		URL urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/switches");
-		HttpURLConnection switchIDConn =(HttpURLConnection) urlStr.openConnection();
-		if (switchIDConn.getResponseCode() != 200) {
-			throw new IOException(switchIDConn.getResponseMessage());
-		}
+	
+		HttpURLConnection switchIDConn = makeConn(urlStr, false);
 		
 		BufferedReader rd = new BufferedReader(
 				new InputStreamReader(switchIDConn.getInputStream()));
@@ -51,45 +49,52 @@ public class RyuREST {
 		}
 		switchIDConn.disconnect();
 		
-		
+		// Establish the HTTP connections
 		urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/flowentry/add");
-		addFlowConn = (HttpURLConnection) urlStr.openConnection();
-		if (addFlowConn.getResponseCode() != 200){
-			throw new IOException(addFlowConn.getResponseMessage());
-		}
+		addFlowConn = makeConn(urlStr, true);
 		
 		urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/flowentry/delete");
-		delFlowConn = (HttpURLConnection) urlStr.openConnection();
-		if (delFlowConn.getResponseCode() != 200){
-			throw new IOException(delFlowConn.getResponseMessage());
-		}
+		delFlowConn = makeConn(urlStr, true);
 		
 		urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/groupentry/add");
-		addGroupConn = (HttpURLConnection) urlStr.openConnection();
-		if (addGroupConn.getResponseCode() != 200){
-			throw new IOException(addGroupConn.getResponseMessage());
-		}
+		addGroupConn = makeConn(urlStr, true);
 		
 		urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/groupentry/modify");
-		modGroupConn = (HttpURLConnection) urlStr.openConnection();
-		if (modGroupConn.getResponseCode() != 200){
-			throw new IOException(modGroupConn.getResponseMessage());
-		}
+		modGroupConn = makeConn(urlStr, true);
 		
 		urlStr = new URL("http://"+ryuCtrlIP+":8080/stats/groupentry/delete");
-		delGroupConn = (HttpURLConnection) urlStr.openConnection();
-		if (delGroupConn.getResponseCode() != 200){
-			throw new IOException(delGroupConn.getResponseMessage());
-		}
+		delGroupConn = makeConn(urlStr, true);
 	}
 	
-	public void AddFlow(){
+	private HttpURLConnection makeConn(URL urlStr, boolean isPost) throws IOException{
+		HttpURLConnection conn = (HttpURLConnection) urlStr.openConnection();
 		
+		if (conn.getResponseCode() != 200){
+			throw new IOException(conn.getResponseMessage());
+		}
+		
+		conn.setUseCaches(false);
+		conn.setAllowUserInteraction(false);
+		
+		if (isPost){
+			conn.setRequestMethod("POST");
+			conn.setDoOutput(true);
+			conn.setDoInput(false);
+		}
+		else{
+			conn.setRequestMethod("GET");
+			conn.setDoOutput(false);
+			conn.setDoInput(true);
+		}
+		
+		return conn;
 	}
 	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+	public void close(){
+		addFlowConn.disconnect();
+		delFlowConn.disconnect();
+		addGroupConn.disconnect();
+		modGroupConn.disconnect();
+		delGroupConn.disconnect();
 	}
-
 }
