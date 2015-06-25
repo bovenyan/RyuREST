@@ -3,53 +3,57 @@ import java.util.*;
 import org.json.simple.*;
 
 public class OpenFlowMsg {
-	String msg_type;
+	String msgType;
 	Map<String, Object> msg = new LinkedHashMap<String, Object>();
 	Map<String, Object> match = new LinkedHashMap<String, Object>();
 	LinkedList<LinkedHashMap<String, Object>> actions = 
 			new LinkedList<LinkedHashMap<String, Object>>();
 	ArrayList<Integer> buckets = new ArrayList<Integer>();
 	
-	JSONObject msg_json = new JSONObject();
+	JSONObject msgJson = new JSONObject();
 	
 	public OpenFlowMsg(String type){
-		msg_type = type;
+		msgType = type;
 	}
 	// Msg
-	public void set_dpid(String value){
+	public void setDpid(String value){
 		msg.put("dpid", value);
 	}
 	
-	public void set_cookie_mask(int cookie, long mask){
+	public void setCookieMask(int cookie, long mask){
 		msg.put("cookie", cookie);
 		msg.put("cookie_mask", 1);
 	}
 	
-	public void set_table_id(int value){
+	public void setIdleTimeout(int value){
+		msg.put("idle_timeout", value);
+	}
+	
+	public void setTableID(int value){
 		msg.put("table_id", Integer.toString(value));
 	}
 	
-	public void set_group_id(int value){
+	public void setGroupID(int value){
 		msg.put("group_id", Integer.toString(value));
 		
-		if (msg_type.equals("AddGroup"))
+		if (msgType.equals("AddGroup"))
 			msg.put("type", "ALL");
 	}
 	
-	public void set_priority(int value){
+	public void setPriority(int value){
 		msg.put("priority", value);
 	}
 	
 	// Match
-	public void set_in_port(int value){
+	public void setInPort(int value){
 		match.put("in_port", value);
 	}
 	
-	public void set_metadata(Long value){
+	public void setMetadata(Long value){
 		match.put("metadata", "0x"+Long.toHexString(value));
 	}
 	
-	public void set_ipv4_src(String value){
+	public void setIpv4Src(String value){
 		String [] parts = value.split("/");
 	
 		match.put("eth_type", 2048);
@@ -58,15 +62,15 @@ public class OpenFlowMsg {
 			match.put("ipv4_src", value);
 		}
 		else{
-			String ip_src_mask = parts[0]+"/";
+			String ipSrcMask = parts[0]+"/";
 			long mask_int = 0xffffffffL;
 			mask_int = mask_int & (mask_int<<(32-Integer.parseInt(parts[1])));
-			ip_src_mask += longToIpv4(mask_int);
-			match.put("ipv4_dst", ip_src_mask);
+			ipSrcMask += longToIpv4(mask_int);
+			match.put("ipv4_dst", ipSrcMask);
 		}
 	}
 	
-	public void set_ipv4_dst(String value){
+	public void setIpv4Dst(String value){
 		String [] parts = value.split("/");
 		
 		match.put("eth_type", 2048);
@@ -75,134 +79,134 @@ public class OpenFlowMsg {
 			match.put("ipv4_dst", value);
 		}
 		else{
-			String ip_dst_mask = parts[0]+'/';
+			String ipDstMask = parts[0]+'/';
 			long mask_int = 0xffffffffL;
 			mask_int = mask_int & (mask_int<<(32-Integer.parseInt(parts[1])));
-			ip_dst_mask += longToIpv4(mask_int);
-			match.put("ipv4_dst", ip_dst_mask);
+			ipDstMask += longToIpv4(mask_int);
+			match.put("ipv4_dst", ipDstMask);
 		}
 	}
 	
-	public void set_tcp_src(int value){
+	public void setTcpSrc(int value){
 		match.put("eth_type", 2048);
 		match.put("nw_proto", 6);
 		match.put("tcp_src", value);
 	}
 	
-	public void set_tcp_dst(int value){
+	public void setTcpDst(int value){
 		match.put("nw_proto", 6);
 		match.put("tcp_dst", value);
 	}
 	
-	public void set_udp_src(int value){
+	public void setUdpSrc(int value){
 		match.put("nw_proto", 17);
 		match.put("udp_src", value);
 	}
 	
-	public void set_udp_dst(int value){
+	public void setUdpDst(int value){
 		match.put("nw_proto", 17);
 		match.put("udp_dst", value);
 	}
 	
 	// Actions
-	public void action_output_port(int value){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionOutputPort(int value){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "OUTPUT");
-		output_action.put("port", value);
-		actions.add(output_action);
+		outputAction.put("type", "OUTPUT");
+		outputAction.put("port", value);
+		actions.add(outputAction);
 	}
 	
-	public void action_output_group(int value){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionOutputGroup(int value){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "OUTPUT");
-		output_action.put("group", value);
-		actions.add(output_action);
+		outputAction.put("type", "OUTPUT");
+		outputAction.put("group", value);
+		actions.add(outputAction);
 	}
 	
-	public void action_to_controller(){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionToController(){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "OUTPUT");
-		output_action.put("port", Long.parseLong("0xfffd",16));
-		actions.add(output_action);
+		outputAction.put("type", "OUTPUT");
+		outputAction.put("port", Integer.parseInt("0xfffd",16));
+		actions.add(outputAction);
 	}
 	
-	public void action_to_l2l3(){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionToL2l3(){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "OUTPUT");
-		output_action.put("port", Long.parseLong("0xfffa",16));
-		actions.add(output_action);
+		outputAction.put("type", "OUTPUT");
+		outputAction.put("port", Integer.parseInt("0xfffa",16));
+		actions.add(outputAction);
 	}
 	
-	public void action_set_ipv4_src(String srcIP){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetIpv4Src(String srcIP){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "ipv4_src");
-		output_action.put("value", srcIP);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "ipv4_src");
+		outputAction.put("value", srcIP);
+		actions.add(outputAction);
 	}
 	
-	public void action_set_ipv4_dst(String dstIP){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetIpv4Dst(String dstIP){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "ipv4_dst");
-		output_action.put("value", dstIP);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "ipv4_dst");
+		outputAction.put("value", dstIP);
+		actions.add(outputAction);
 	}
 	
-	public void action_set_tcp_src(int srcPort){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetTcpSrc(int srcPort){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "tcp_src");
-		output_action.put("value", srcPort);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "tcp_src");
+		outputAction.put("value", srcPort);
+		actions.add(outputAction);
 	}
 	
-	public void action_set_tcp_dst(int dstPort){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetTcpDst(int dstPort){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "tcp_dst");
-		output_action.put("value", dstPort);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "tcp_dst");
+		outputAction.put("value", dstPort);
+		actions.add(outputAction);
 	}
 	
-	public void action_set_udp_src(int srcPort){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetUdpSrc(int srcPort){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "udp_src");
-		output_action.put("value", srcPort);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "udp_src");
+		outputAction.put("value", srcPort);
+		actions.add(outputAction);
 	}
 	
-	public void action_set_udp_dst(int dstPort){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionSetUdpDst(int dstPort){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "SET_FIELD");
-		output_action.put("field", "udp_dst");
-		output_action.put("value", dstPort);
-		actions.add(output_action);
+		outputAction.put("type", "SET_FIELD");
+		outputAction.put("field", "udp_dst");
+		outputAction.put("value", dstPort);
+		actions.add(outputAction);
 	}
 	
-	public void action_write_metadata(long metaData){
-		LinkedHashMap<String, Object> output_action = 
+	public void actionWriteMetadata(long metaData){
+		LinkedHashMap<String, Object> outputAction = 
 				new LinkedHashMap<String, Object>();
-		output_action.put("type", "WRITE_METADATA");
-		output_action.put("metadata", "0x" + Long.toHexString(metaData));
-		output_action.put("metadata_mask", "0xffffffff");
-		actions.add(output_action);
+		outputAction.put("type", "WRITE_METADATA");
+		outputAction.put("metadata", "0x" + Long.toHexString(metaData));
+		outputAction.put("metadata_mask", "0xffffffff");
+		actions.add(outputAction);
 	}
 	
 	// Buckets
-	public void bucket_outputs(ArrayList<Integer> out_ports){
-		buckets = new ArrayList<Integer>(out_ports);
+	public void setBucketOutputs(ArrayList<Integer> outPorts){
+		buckets = new ArrayList<Integer>(outPorts);
 	}
 	
 	/**
@@ -223,19 +227,19 @@ public class OpenFlowMsg {
 	}
 	
 	public String toJson(){
-		msg_json = new JSONObject(msg);
+		msgJson = new JSONObject(msg);
 		
-		if (msg_type.contains("Flow")){
-			msg_json.put("match", match);
+		if (msgType.contains("Flow")){
+			msgJson.put("match", match);
 			
-			if (msg_type.equals("AddFlow")){
-				msg_json.put("actions", actions);
+			if (msgType.equals("AddFlow")){
+				msgJson.put("actions", actions);
 			}
 		}
-		else if (msg_type.contains("Group")){
+		else if (msgType.contains("Group")){
 			JSONObject bucket_json = new JSONObject();
 			
-			if (!msg_type.equals("DelGroup")){
+			if (!msgType.equals("DelGroup")){
 				for (int port : buckets){
 					JSONObject bucket_action = new JSONObject();
 					bucket_action.put("type", "OUTPUT");
@@ -246,9 +250,9 @@ public class OpenFlowMsg {
 				}
 			}
 			
-			msg_json.put("buckets", bucket_json);
+			msgJson.put("buckets", bucket_json);
 		}
 		
-		return msg_json.toString().replace("\\", "");
+		return msgJson.toString().replace("\\", "");
 	}
 }
